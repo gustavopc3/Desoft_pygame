@@ -18,10 +18,10 @@ def main():
 
     surf = pygame.display.set_mode((400, 400)) # cria superficie para o jogo
 
-    pygame.display.set_caption("Exemplo pygame")
+    pygame.display.set_caption("Octopy")
    
     pos_peixinho = [200, 200]
-    velocidade_peixinho = [0.5, 0.27]
+    velocidade_peixinho = [0.2, 0.1]
     delta_peixinho = {"esquerda":0, "direita":0, "acima":0, "abaixo":0}
 
 
@@ -66,9 +66,9 @@ def main():
         pos_peixinho[0] += int((delta_peixinho["direita"] - delta_peixinho["esquerda"]) * velocidade_peixinho[0] * delta_time)  
         pos_peixinho[1] += int((delta_peixinho["abaixo"] - delta_peixinho["acima"]) * velocidade_peixinho[1]* delta_time)
         
-        pygame.draw.circle(surf, AMARELO, pos_peixinho, 50)
+        pygame.draw.circle(surf, AMARELO, pos_peixinho, 50) #desenha o circulo que a gente est'a usando no lugar do peixinho
     
-        
+        pygame.display.flip()
        
 if __name__ == "__main__":
     main()
