@@ -1,11 +1,10 @@
-#Pygame template - esqueleto para novo projeto em pygame 
 import pygame
 import random
 import os # Da os comandos para possibilitar a criação de um caminho para as pastas
 
-WIDTH = 360
-HEIGHT = 480
-FPS = 30
+WIDTH = 480
+HEIGHT = 600
+FPS = 60
 
 #Cores (números variam de 0 a 255 para as cores vermelho, verde e azul)
 VERMELHO = (255, 0, 0)
@@ -30,21 +29,38 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         # Como o sprite vai ser (imagem)
         self.image = pygame.image.load(os.path.join(img_folder, "peixinho.png")).convert() #Função para realizar um desenho padrão
-        self.image.set_colorkey(PRETO) # Para retirar possíveis erros de cores no fundo da imagem
+        self.image.set_colorkey(PRETO)# Para retirar possíveis erros de cores no fundo da imagem
         # Como o sprite vai se posicionar na tela
         self.rect = self.image.get_rect() # Retângulos que definem a altura e a largura da imagem do sprite
         self.rect.center = (WIDTH / 2, HEIGHT / 2) #Define a posição do sprite
-        self.y_speed = 5
+        self.rect.bottom=HEIGHT-10
+        self.speedx=0
+        self.speedy=0
+        
+    def update(self): #o que ele faz cada vez que atualiza
+        self.speedx = 0 #não se mova se nada foi apertado
+        self.speedy = 0
+        keystate = pygame.key.get_pressed() #volta uma lista com que teclas estão apertatdas
+        if keystate[pygame.K_LEFT]:
+            self.speedx = -5
+        if keystate[pygame.K_RIGHT]:
+            self.speedx = 5
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH #nunca pode passar de WIDTH para a direita 
+        if self.rect.left < 0:
+            self.rect.left = 0 #nunca pode passar do iniciio da tela
+            
+        if keystate[pygame.K_UP]:
+            self.speedy = -2.5
+        if keystate[pygame.K_DOWN]:
+            self.speedy = 2.5
+        if self.rect.top <0: #AQUI QUE NAO FUNCIONAAAAAAAAAAAAAAAAA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            self.rect.top =0  #nunca pode passar de WIDTH para a direita 
+        if self.rect.bottom > HEIGHT:
+            self.rect.bottom =HEIGHT#nunca pode passar do iniciio da tela    
 
-    def update(self):
-        self.rect.x += 5
-        self.rect.y += self.y_speed
-        if self.rect.bottom > HEIGHT - 200:
-            self.y_speed = -5
-        if self.rect.top < 200:
-            self.y_speed = 5
-        if self.rect.left > WIDTH:
-            self.rect.right = 0
+        self.rect.x += self.speedx #move a imagem na velocidade do speedx - x é horizontal
+        self.rect.y += self.speedy
 
 
 # INICIALIZA O PYGAME E CRIA A JANELA DO JOGO
@@ -56,13 +72,13 @@ pygame.mixer.init()
 # Cria a janela do jogo
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 # Introduz um nome para o jogo
-pygame.display.set_caption("My game")
+pygame.display.set_caption("Octopy")
 # Controla a velocidade e garante que o jogo vai rodar no FPS definido
 clock = pygame.time.Clock()
 #Grupo de sprites
 all_sprites = pygame.sprite.Group()
-player = Player()
-all_sprites.add(player)
+player = Player() 
+all_sprites.add(player) #adiciona player to all sprites
 
 # GAME LOOP
 running = True
@@ -75,7 +91,8 @@ while running:
         #Para que o botão X da tela sirva para dar exit no jogo
         if event.type == pygame.QUIT:
             running = False
-    
+            
+            
     #Updates
     all_sprites.update()
     #DRAW/RENDER
