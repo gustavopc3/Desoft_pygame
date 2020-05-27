@@ -1,0 +1,112 @@
+import pygame
+import sys
+import os # Da os comandos para possibilitar a criação de um caminho para as pastas
+
+WIDTH = 360
+HEIGHT = 480
+FPS = 30
+
+#Cores (números variam de 0 a 255 para as cores vermelho, verde e azul)
+VERMELHO = (255, 0, 0)
+VERDE = (0, 255, 0)
+AZUL_ESCURO = (0, 0, 255)
+PRETO = (0, 0, 0)
+BRANCO = (255, 255, 255)
+AMARELO = (255, 255, 0)
+ROSA = (255, 0, 255)
+AZUL_CLARO = (0, 255, 255)
+pos_peixinho = [200, 200]
+velocidade_peixinho = [0.2, 0.1]
+
+# Criando as pastas de assets (imagens e sons)
+# OBS: para o Windows vai aparecer: "C:\Users\gustavopinheiro\Documents\img"
+# OBS 2: para o MacOS vai aparecer: "/Users/gustavopinheiro/Documents/img"
+game_folder = os.path.dirname(__file__) # __file__ é uma ferramenta que reconhece o nome da pasta
+img_folder = os.path.join(game_folder, "img") #Junta com o caminho criado para o game, e acrescenta um pedaço (para encontrar a pasta dentro da pasta principal)
+# Sprite para o player
+class Player(pygame.sprite.Sprite):
+    # O código que queremos rodar quando quando criamos o Player
+    def __init__(self):
+        # Para fazer o sprite funcionar
+        pygame.sprite.Sprite.__init__(self)
+        # Como o sprite vai ser (imagem)
+        self.image = pygame.image.load(os.path.join(img_folder, "peixinho.png")).convert() #Função para realizar um desenho padrão
+        self.image.set_colorkey(PRETO) # Para retirar possíveis erros de cores no fundo da imagem
+        # Como o sprite vai se posicionar na tela
+        self.rect = self.image.get_rect() # Retângulos que definem a altura e a largura da imagem do sprite
+        self.rect.center = (pos_peixinho[0], pos_peixinho[1]) #Define a posição do sprite
+
+
+    def update(self):
+
+        
+        delta_peixinho = {"esquerda":0, "direita":0, "acima":0, "abaixo":0}
+        eventos = pygame.event.get()
+        for evento in eventos:
+            
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_LEFT:
+                    delta_peixinho["esquerda"] = 1
+                elif evento.key == pygame.K_RIGHT:
+                    delta_peixinho["direita"] = 1
+                elif evento.key == pygame.K_UP:
+                    delta_peixinho["acima"] = 1
+                elif evento.key == pygame.K_DOWN:
+                    delta_peixinho["abaixo"] = 1
+
+
+            if evento.type == pygame.KEYUP:
+                if evento.key == pygame.K_LEFT:
+                    delta_peixinho["esquerda"] = 0
+                if evento.key == pygame.K_RIGHT:
+                    delta_peixinho["direita"] = 0
+                elif evento.key == pygame.K_UP:
+                    delta_peixinho["acima"] = 0
+                elif evento.key == pygame.K_DOWN:
+                    delta_peixinho["abaixo"] = 0
+                    
+        pos_peixinho[0] += int((delta_peixinho["direita"] - delta_peixinho["esquerda"]) * velocidade_peixinho[0] * delta_time)  
+        pos_peixinho[1] += int((delta_peixinho["abaixo"] - delta_peixinho["acima"]) * velocidade_peixinho[1]* delta_time)
+
+
+
+# INICIALIZA O PYGAME E CRIA A JANELA DO JOGO
+
+# Inicializa o Pygame
+pygame.init()
+# Para colocar o som, é necessário inicializar o mixer
+pygame.mixer.init()
+# Cria a janela do jogo
+screen = pygame.display.set_mode((WIDTH,HEIGHT))
+# Introduz um nome para o jogo
+pygame.display.set_caption("My game")
+# Controla a velocidade e garante que o jogo vai rodar no FPS definido
+clock = pygame.time.Clock()
+#Grupo de sprites
+all_sprites = pygame.sprite.Group()
+player = Player()
+all_sprites.add(player)
+
+# GAME LOOP
+running = True
+while running:
+    # Mantém o loop na velocidade correta (FPS)
+    clock.tick(FPS)
+    delta_time = clock.tick(60)
+
+    #Events (Process input):
+    for event in pygame.event.get():
+        #Para que o botão X da tela sirva para dar exit no jogo
+        if event.type == pygame.QUIT:
+            running = False
+            running = False
+    
+    #Updates
+    all_sprites.update()
+    #DRAW/RENDER
+    screen.fill(AZUL_CLARO)
+    all_sprites.draw(screen)
+    #Fazer isso depois de desenhar tudo (virar do desenho para o display) - DOUBLE BUFFERING
+    pygame.display.flip()
+
+pygame.quit()
