@@ -6,7 +6,7 @@ class Map:
     # Inicializa a classe com o nome do arquivo
     def __init__(self, filename):
         self.data = []
-        with open(filename, "rt") as f:
+        with open(filename, 'rt') as f:
             for line in f:
                 #Para ajustar a brecha da camera e o fim do mapa no lado direito, por conta da leitura do mapa que conta os "/n"a cada linha.
                 self.data.append(line.strip())

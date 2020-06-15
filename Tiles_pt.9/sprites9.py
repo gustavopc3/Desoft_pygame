@@ -31,13 +31,16 @@ def collide_with_walls(sprite, group, dir):
 # Criando o jogador
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y): #O x e y representam o ponto inicial do jogador
+        self._layer = PLAYER_LAYER
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = game.peixinho_images_esquerda[0]
+        self.image.set_colorkey(BLACK)
         #self.image = peixinho_images_esquerda[0]
         #self.image.set_colorkey(PRETO) # Imagem do jogador
         self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
         # Velocidade em função dos vetores
         self.vel = vec(0, 0)
         # Posição em função dos vetores
@@ -71,6 +74,7 @@ class Player(pg.sprite.Sprite):
         if self.vel.x !=0 and self.vel.y != 0:
             self.vel *= 0.7071
 
+
     # Analisa se o espaço está vazio para o jogador poder se movimentar
     # UPDATE
     def update(self):
@@ -83,8 +87,7 @@ class Player(pg.sprite.Sprite):
         collide_with_walls(self, self.game.walls, 'x')
         self.rect.y = self.pos.y
         collide_with_walls(self, self.game.walls, 'y')
-        #if self.health <= 0:
-            #self.kill()
+
         keys = pg.key.get_pressed()
 
         # UPDATE da mudança de imagens do peixinho
@@ -98,6 +101,7 @@ class Player(pg.sprite.Sprite):
                 else:
                     self.image = self.game.peixinho_images_esquerda[self.frame_esquerda] 
                     self.image.set_colorkey(BLACK)
+
         if keys[pg.K_RIGHT] or keys[pg.K_d]:
             if now - self.last_update > self.frame_rate:
                 self.last_update=now
@@ -120,6 +124,9 @@ class Player(pg.sprite.Sprite):
                         self.image = self.game.peixinho_images_tapa[self.frame_tapa] 
                         self.image.set_colorkey(BLACK)
 
+                    # /// Adicionar o som do tapa ///
+                    #choice(self.game.tapa_sound['']).play()
+
         # Para fazer com que o jogador colida com as paredes quando utilizamos uma PLAYER_SPEED
     # Para criar uma barra de vidas que fica acima do sprite
     #def draw_health(self):
@@ -137,6 +144,7 @@ class Player(pg.sprite.Sprite):
 class Bullet(pg.sprite.Sprite):
     #Posição que vai aparecer e em qual direção ela vai se mover
     def __init__(self, game, player, pos, dir):
+        self._layer = BULLET_LAYER
         self.groups = game.all_sprites, game.bullets
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -151,11 +159,17 @@ class Bullet(pg.sprite.Sprite):
     
     def update(self):
         self.pos += self.vel * self.game.dt
+        #self.rot = (self.player.pos - self.pos).angle_to(vec(1, 0))
+        #self.image = pg.transform.rotate(self.game.bullet_img, self.rot)
         self.rect.center = self.pos
         #if pg.time.get_ticks() - self.spawn_time > BULLET_LIFETIME:
             #self.kill()
         if pg.sprite.spritecollideany(self, self.game.walls):
             self.kill()
+        #if pg.sprite.spritecollideany(self, self.game.mobs):
+            #self.kill()
+        #if pg.sprite.spritecollideany(self, self.game.mobs2):
+            #self.kill()
         #self.rect.x = self.pos.x
         #if collide_with_walls(self, self.game.walls, 'x'):
             #self.kill()
@@ -168,6 +182,7 @@ class Bullet(pg.sprite.Sprite):
 # Criando os polvos   
 class Mob(pg.sprite.Sprite):
     def __init__(self, game, player, x, y): # x e y definem a posição inicial da parede
+        self._layer = MOB_LAYER
         # Adiciona os polvos ao grupo de sprites
         self.groups = game.all_sprites, game.mobs
         # Inicializa o sprite
@@ -176,7 +191,7 @@ class Mob(pg.sprite.Sprite):
         self.player = player
         # Define a imagem do polvo
         self.image = game.octopy_images[0]
-        self.image.set_colorkey(BLACK)
+        #self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.pos = vec(x, y) * TILESIZE
         self.rect.center = self.pos
@@ -199,6 +214,7 @@ class Mob(pg.sprite.Sprite):
         self.rect.center = self.pos
         # Para que o Mob morra quando levar um tapa
         if self.health <= 0:
+            #choice(self.game.mob_hit_sound).play()
             self.kill()
         
         # Parte Nova
@@ -228,19 +244,77 @@ class Mob(pg.sprite.Sprite):
         #all_sprites.add(bullet)
         #bullets.add(bullet)
 
+# Criando polvo (esquerda):
+class Mob2(pg.sprite.Sprite):
+    def __init__(self, game, player, x, y): # x e y definem a posição inicial da parede
+        self._layer = MOB2_LAYER
+        # Adiciona os polvos ao grupo de sprites
+        self.groups = game.all_sprites, game.mobs2
+        # Inicializa o sprite
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.player = player
+        # Define a imagem do polvo
+        self.image = game.octopy_esquerda[0]
+        #self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.pos = vec(x, y) * TILESIZE
+        self.rect.center = self.pos
+        #Define uma rotação para o mob
+        #self.rot = 0
+        # Parte nova
+        self.frame=0
+        self.frame_rate = 200
+        self.last_update = pg.time.get_ticks()
+        self.last_update1 = pg.time.get_ticks()
+        self.health = MOB2_HEALTH
+    #Faz o update da posição do mob para que ele sempre esteja de frente para o peixinho
+    def update(self):
+        # (vetores player.pos - mob.pos, função do ângulo angle_to() )
+        #self.rot = (self.game.player.pos - self.pos).angle_to(vec(-1,0)) # Coloquei -1 no vetor x por peixe ficar de frente (tava ao contrario)
+        # Rotaciona a imagem pelo vetor de rotação
+        #self.image = pg.transform.rotate(self.game.mob_img, self.rot)
+        self.rect = self.image.get_rect()
+        #Faz o update do centro da imagem para permanecer na direção
+        self.rect.center = self.pos
+        # Para que o Mob morra quando levar um tapa
+        if self.health <= 0:
+            #choice(self.game.mob_hit_sound).play()
+            self.kill()
+        
+        # Parte Nova
+        # Animação
+        now1 = pg.time.get_ticks()
+        now = pg.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(self.game.octopy_esquerda):
+                self.frame = 0
+            else:
+                self.image = self.game.octopy_esquerda[self.frame] 
+                self.image.set_colorkey(BLACK)
+        # Mob atirando
+        if now1 - self.last_update1 > 1000:
+            self.last_update1 = now1
+            dir = vec(-1,0).rotate(self.player.rot)
+            #dir = vec(1,0).rotate
+            # Para que a posição da bullet fique igual a da imagem (um pouco acima do centro do mob)
+            pos = self.pos + BARREL_OFFSET2
+            Bullet(self.game, self.player, pos, dir)
+            #mob.shoot()
 
 # Criando uma parede (fixa)
 class Wall(pg.sprite.Sprite):
-    def __init__(self, game, x, y): # x e y definem a posição inicial da parede
+    def __init__(self, game, x, y): # x e y definem a posição inicial da 
+        self._layer = WALL_LAYER
         # Adiciona a parede ao grupo de sprites
         self.groups = game.all_sprites, game.walls
         # Inicializa o sprite
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         # Cria a superfície da parede (de cada quadrado, não da parede por inteiro)
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        # Preenche a superfície com uma cor
-        self.image.fill(GREEN)
+        self.image = game.wall_img
         self.rect = self.image.get_rect()
         # Cria as variaveis x e y para a parede
         self.x = x
@@ -248,3 +322,22 @@ class Wall(pg.sprite.Sprite):
         # Faz as posições se transformarem nos tiles
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
+
+#Criando o Background
+#class Background(pg.sprite.Sprite):
+    #def __init__(self, game, x, y): # x e y definem a posição inicial do background
+        #self._layer = BACKGROUND_LAYER
+        #Adiciona o background ao grupo de sprites
+        #self.groups = game.all_sprites, game.bg
+        # Inicializa o sprite
+        #pg.sprite.Sprite.__init__(self, self.groups)
+        #self.game = game
+        # Cria a superfície da parede (de cada quadrado, não da parede por inteiro)
+        #self.image = game.bg_img
+        #self.rect = self.image.get_rect()
+        # Cria as variaveis x e y para a parede
+        #self.x = x
+        #self.y = y
+        # Faz as posições se transformarem nos tiles
+        #self.rect.x = x * TILESIZE
+        #self.rect.y = y * TILESIZE
